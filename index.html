@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#123b63">
+    <meta name="description" content="Registro e acompanhamento do corte de bobinas na área de refugo.">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="icon" href="/assets/icons/icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/css/styles.css">
+    <title>Santher | Controle de Refugo</title>
+  </head>
+  <body>
+    <header class="app-header">
+      <a class="brand" href="#inicio" aria-label="Santher, Controle de Refugo">
+        <img class="brand__logo" src="/assets/images/logo.png" alt="Santher" hidden>
+        <span class="brand__name">Controle de Refugo</span>
+      </a>
+      <span id="connection-status" class="connection-status" role="status">Verificando conexão</span>
+    </header>
+
+    <main id="main-content" class="app-main">
+      <section id="view-home" class="view" aria-labelledby="home-title">
+        <div class="page-heading">
+          <p class="eyebrow">CONTROLE OPERACIONAL</p>
+          <h1 id="home-title">Registro de corte</h1>
+          <p class="muted">Registro e acompanhamento do corte de bobinas.</p>
+        </div>
+        <p id="today-label" class="today-label"></p>
+        <button class="button button--primary button--wide" type="button" data-view="registro">Registrar produção</button>
+        <section class="summary-card" aria-labelledby="today-total-title">
+          <div>
+            <p class="summary-card__label" id="today-total-title">Produção registrada hoje</p>
+            <p class="summary-card__value" id="home-today-total" aria-live="polite">Carregando…</p>
+          </div>
+          <span class="summary-card__unit">bobinas</span>
+        </section>
+        <p id="home-error" class="feedback feedback--error" role="alert" hidden></p>
+        <div class="home-links">
+          <button class="link-card" type="button" data-view="historico">
+            <span class="link-card__title">Histórico</span>
+            <span class="link-card__detail">Consulte e filtre lançamentos</span>
+            <span class="link-card__arrow" aria-hidden="true">›</span>
+          </button>
+          <button class="link-card" type="button" data-view="indicadores">
+            <span class="link-card__title">Indicadores</span>
+            <span class="link-card__detail">Acompanhe a produção registrada</span>
+            <span class="link-card__arrow" aria-hidden="true">›</span>
+          </button>
+        </div>
+        <p class="disclaimer">Os números representam produção registrada e não uma medição completa de eficiência operacional.</p>
+      </section>
+
+      <section id="view-registro" class="view" aria-labelledby="form-title" hidden>
+        <div class="page-heading">
+          <button class="back-button" type="button" data-view="inicio">‹ Início</button>
+          <h1 id="form-title">Registrar produção</h1>
+          <p class="muted">Registre somente bobinas ou lotes totalmente cortados.</p>
+        </div>
+        <form id="production-form" novalidate>
+          <div class="field">
+            <label for="employee-re">RE do colaborador</label>
+            <input id="employee-re" name="re" type="text" inputmode="numeric" autocomplete="off" maxlength="30" required aria-describedby="re-error">
+            <span id="re-error" class="field-error"></span>
+          </div>
+
+          <fieldset class="field">
+            <legend>Material</legend>
+            <div class="choice-grid choice-grid--two">
+              <label class="choice"><input type="radio" name="material" value="Com RU" required><span>Com RU</span></label>
+              <label class="choice"><input type="radio" name="material" value="Sem RU" required><span>Sem RU</span></label>
+            </div>
+            <span id="material-error" class="field-error"></span>
+          </fieldset>
+
+          <fieldset class="field">
+            <legend>Tamanho da bobina</legend>
+            <div class="size-grid">
+              <label class="size-choice">
+                <input type="radio" name="size" value="Pequena" required>
+                <span class="size-choice__card"><img src="/assets/images/bobinas/pequena.svg" alt="Ilustração de uma bobina pequena"><span>Pequena</span></span>
+              </label>
+              <label class="size-choice">
+                <input type="radio" name="size" value="Média" required>
+                <span class="size-choice__card"><img src="/assets/images/bobinas/media.svg" alt="Ilustração de uma bobina média"><span>Média</span></span>
+              </label>
+              <label class="size-choice">
+                <input type="radio" name="size" value="Grande" required>
+                <span class="size-choice__card"><img src="/assets/images/bobinas/grande.svg" alt="Ilustração de uma bobina grande"><span>Grande</span></span>
+              </label>
+            </div>
+            <span class="field-hint">Ilustrações de referência, sem escala ou medidas oficiais.</span>
+            <span id="size-error" class="field-error"></span>
+          </fieldset>
+
+          <fieldset class="field">
+            <legend>Dificuldade de corte</legend>
+            <div class="choice-grid choice-grid--three">
+              <label class="choice"><input type="radio" name="difficulty" value="Fácil" required><span><strong>Fácil</strong><small>Corte sem dificuldade relevante</small></span></label>
+              <label class="choice"><input type="radio" name="difficulty" value="Média" required><span><strong>Média</strong><small>Exigiu atenção ou esforço moderado</small></span></label>
+              <label class="choice"><input type="radio" name="difficulty" value="Difícil" required><span><strong>Difícil</strong><small>Exigiu esforço ou atenção elevados</small></span></label>
+            </div>
+            <span class="field-hint">Classifique pela experiência real do corte, independentemente do RU.</span>
+            <span id="difficulty-error" class="field-error"></span>
+          </fieldset>
+
+          <div class="field">
+            <label for="quantity">Quantidade</label>
+            <div class="quantity-control">
+              <button id="quantity-minus" class="quantity-control__button" type="button" aria-label="Diminuir quantidade">−</button>
+              <input id="quantity" name="quantity" type="number" inputmode="numeric" min="1" step="1" value="1" required aria-describedby="quantity-error">
+              <button id="quantity-plus" class="quantity-control__button" type="button" aria-label="Aumentar quantidade">+</button>
+            </div>
+            <span id="quantity-error" class="field-error"></span>
+          </div>
+
+          <p id="form-feedback" class="feedback" role="status" hidden></p>
+          <button id="save-button" class="button button--primary button--wide" type="submit">Salvar produção</button>
+          <button id="another-record" class="button button--secondary button--wide" type="button" hidden>Registrar outra produção</button>
+        </form>
+      </section>
+
+      <section id="view-historico" class="view" aria-labelledby="history-title" hidden>
+        <div class="page-heading">
+          <button class="back-button" type="button" data-view="inicio">‹ Início</button>
+          <h1 id="history-title">Histórico</h1>
+          <p class="muted">Lançamentos reais da planilha.</p>
+        </div>
+        <form id="history-filters" class="filters">
+          <div class="field"><label for="filter-from">De</label><input id="filter-from" name="from" type="date"></div>
+          <div class="field"><label for="filter-to">Até</label><input id="filter-to" name="to" type="date"></div>
+          <div class="field"><label for="filter-re">RE</label><input id="filter-re" name="re" type="text" inputmode="numeric" maxlength="30"></div>
+          <div class="field"><label for="filter-material">Material</label><select id="filter-material" name="material"><option value="">Todos</option><option>Com RU</option><option>Sem RU</option></select></div>
+          <div class="field"><label for="filter-size">Tamanho</label><select id="filter-size" name="size"><option value="">Todos</option><option>Pequena</option><option>Média</option><option>Grande</option></select></div>
+          <div class="field"><label for="filter-difficulty">Dificuldade</label><select id="filter-difficulty" name="difficulty"><option value="">Todas</option><option>Fácil</option><option>Média</option><option>Difícil</option></select></div>
+          <button class="button button--secondary" type="submit">Aplicar filtros</button>
+          <button id="clear-filters" class="button button--text" type="button">Limpar filtros</button>
+        </form>
+        <p id="history-status" class="muted" role="status"></p>
+        <div id="history-list" class="record-list"></div>
+      </section>
+
+      <section id="view-indicadores" class="view" aria-labelledby="dashboard-title" hidden>
+        <div class="page-heading">
+          <button class="back-button" type="button" data-view="inicio">‹ Início</button>
+          <h1 id="dashboard-title">Indicadores</h1>
+          <p class="muted">Totais calculados pela quantidade registrada.</p>
+        </div>
+        <form id="dashboard-filters" class="filters filters--compact">
+          <div class="field"><label for="dashboard-from">De</label><input id="dashboard-from" name="from" type="date"></div>
+          <div class="field"><label for="dashboard-to">Até</label><input id="dashboard-to" name="to" type="date"></div>
+          <div class="field"><label for="dashboard-re">RE</label><input id="dashboard-re" name="re" type="text" inputmode="numeric" maxlength="30"></div>
+          <button class="button button--secondary" type="submit">Atualizar</button>
+          <button id="clear-dashboard-filters" class="button button--text" type="button">Limpar</button>
+        </form>
+        <p id="dashboard-status" class="muted" role="status"></p>
+        <div id="dashboard-content"></div>
+        <p class="disclaimer">Indicadores de produção registrada; não consideram tempo de corte, espera, afiação ou outras interrupções.</p>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Navegação principal">
+      <button type="button" data-view="inicio" aria-current="page"><span aria-hidden="true">⌂</span>Início</button>
+      <button type="button" data-view="historico"><span aria-hidden="true">▤</span>Histórico</button>
+      <button type="button" data-view="indicadores"><span aria-hidden="true">▥</span>Indicadores</button>
+    </nav>
+    <script type="module" src="/js/app.js"></script>
+  </body>
+</html>

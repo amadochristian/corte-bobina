@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 90" role="img" aria-label="Ilustração de bobina grande">
+  <rect width="120" height="90" rx="8" fill="#f3f6f8"/>
+  <ellipse cx="60" cy="76" rx="42" ry="8" fill="#d8e2e9"/>
+  <path d="M23 18c0-8 17-13 37-13s37 5 37 13v57c0 8-17 13-37 13s-37-5-37-13z" fill="#fff" stroke="#174d7c" stroke-width="2"/>
+  <ellipse cx="60" cy="18" rx="37" ry="13" fill="#eaf2f8" stroke="#174d7c" stroke-width="2"/>
+  <ellipse cx="60" cy="18" rx="10" ry="4" fill="#c7d8e5" stroke="#174d7c" stroke-width="1.5"/>
+  <path d="M24 29c20 9 52 9 72 0M24 40c20 9 52 9 72 0M24 51c20 9 52 9 72 0M24 62c20 9 52 9 72 0M24 73c20 9 52 9 72 0" fill="none" stroke="#9eb8ca" stroke-width="1.5"/>
+</svg>

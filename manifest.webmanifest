@@ -1,0 +1,15 @@
+{
+  "id": "/",
+  "name": "Santher | Controle de Refugo",
+  "short_name": "Controle Refugo",
+  "description": "Registro e acompanhamento do corte de bobinas.",
+  "lang": "pt-BR",
+  "start_url": "/#inicio",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f3f6f8",
+  "theme_color": "#123b63",
+  "icons": [
+    { "src": "/assets/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

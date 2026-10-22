@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 90" role="img" aria-label="Ilustração de bobina média">
+  <rect width="120" height="90" rx="8" fill="#f3f6f8"/>
+  <ellipse cx="60" cy="68" rx="34" ry="9" fill="#d8e2e9"/>
+  <path d="M32 24c0-7 13-12 28-12s28 5 28 12v43c0 7-13 12-28 12S32 74 32 67z" fill="#fff" stroke="#174d7c" stroke-width="2"/>
+  <ellipse cx="60" cy="24" rx="28" ry="11" fill="#eaf2f8" stroke="#174d7c" stroke-width="2"/>
+  <ellipse cx="60" cy="24" rx="8" ry="3.5" fill="#c7d8e5" stroke="#174d7c" stroke-width="1.5"/>
+  <path d="M33 34c15 8 39 8 54 0M33 44c15 8 39 8 54 0M33 54c15 8 39 8 54 0M33 64c15 8 39 8 54 0" fill="none" stroke="#9eb8ca" stroke-width="1.5"/>
+</svg>
