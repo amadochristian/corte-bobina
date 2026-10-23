@@ -40,7 +40,7 @@ Não abra `index.html` diretamente como arquivo: módulos, service worker e rota
    - `SPREADSHEET_ID`: ID copiado da planilha.
    - `SHEET_NAME`: nome exato da aba que contém os registros.
    - `INTEGRATION_TOKEN`: segredo aleatório longo, exclusivo e não versionado.
-4. Execute uma função de teste no editor para conceder as permissões necessárias à planilha. O script verifica cabeçalhos e falha sem criar uma aba quando a configuração não corresponde.
+4. No menu de funções do editor, selecione `verifyConfiguration` e clique em **Executar**. Autorize o acesso solicitado pelo Google. A função verifica as propriedades, o acesso à planilha, o nome da aba e os cabeçalhos sem criar ou alterar dados. **Não execute `doPost` pelo editor**: essa função recebe o evento HTTP automaticamente quando o endpoint é chamado.
 5. Publique como **Aplicativo da web**, com acesso compatível com a chamada server-to-server aprovada pela organização. Se a política exigir autenticação Google que não funcione com a chamada anônima da Vercel, interrompa a implantação e defina uma arquitetura corporativa autorizada; não torne a planilha pública para contornar isso.
 6. Copie a URL `/exec` da implantação para `APPS_SCRIPT_URL`. Após qualquer alteração no código, atualize a implantação.
 

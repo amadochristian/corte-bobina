@@ -9,6 +9,12 @@ const MAX_RECORDS = 5000;
 
 function doPost(event) {
   try {
+    if (!event || !event.postData || typeof event.postData.contents !== "string") {
+      return output({
+        ok: false,
+        error: "doPost recebe chamadas HTTP. Execute verifyConfiguration no editor para testar a configuração."
+      });
+    }
     const request = JSON.parse(event.postData.contents || "{}");
     const properties = PropertiesService.getScriptProperties();
     const token = properties.getProperty("INTEGRATION_TOKEN");
@@ -22,6 +28,14 @@ function doPost(event) {
     console.error("Request failed: " + String(error && error.message || "unknown"));
     return output({ ok: false, error: "Não foi possível concluir a operação." });
   }
+}
+
+function verifyConfiguration() {
+  const token = PropertiesService.getScriptProperties().getProperty("INTEGRATION_TOKEN");
+  if (!token) throw new Error("Configure INTEGRATION_TOKEN nas propriedades do script.");
+  const sheet = getSheet();
+  Logger.log("Configuração válida. Aba verificada: " + sheet.getName());
+  return true;
 }
 
 function output(value) {
