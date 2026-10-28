@@ -11,9 +11,9 @@ Aplicativo web mobile-first para registrar lotes totalmente cortados e consultar
 - `lib/apps-script.js`: validação e chamada server-side ao adaptador.
 - `google-apps-script/Code.gs`: validação, leitura e escrita da planilha.
 - `manifest.webmanifest`, `sw.js`: instalação e cache somente do app shell; respostas da API nunca são cacheadas.
-- `assets/images/bobinas/`: ilustrações temporárias comparativas. Substitua-as por referências autorizadas quando disponíveis.
+- `assets/images/bobinas/`: ilustrações antigas de tamanho, não usadas no formulário atual.
 
-O logotipo real não foi fornecido. Coloque o arquivo autorizado em `assets/images/logo.png`; até lá, o espaço do logotipo fica oculto (não há logotipo substituto). Os cabeçalhos esperados na primeira linha da aba são, nesta ordem: `Data`, `RE do colaborador`, `Material`, `Tamanho`, `Dificuldade`, `Quantidade`.
+O logotipo real não foi fornecido. Coloque o arquivo autorizado em `assets/images/logo.png`; até lá, o espaço do logotipo fica oculto (não há logotipo substituto). Os cabeçalhos esperados na primeira linha da aba são, nesta ordem: `Data`, `RE do colaborador`, `Material`, `Peso (kg)`, `Dificuldade`, `Quantidade`.
 
 ## Executar localmente
 
@@ -28,7 +28,7 @@ Não abra `index.html` diretamente como arquivo: módulos, service worker e rota
 ## Conectar a planilha existente
 
 1. Abra a planilha no Google Drive. Copie o ID da URL, entre `/d/` e `/edit`. O ID é uma configuração, não um mecanismo de autorização.
-2. Confirme o nome exato da aba de lançamentos e que a primeira linha tem os seis cabeçalhos acima, sem alterar a ordem.
+2. Confirme o nome exato da aba de lançamentos e que a primeira linha tem os seis cabeçalhos acima, sem alterar a ordem. Na migração, substitua o cabeçalho `Tamanho` existente por `Peso (kg)`; os valores antigos de tamanho permanecem no histórico, mas não entram nos totais em kg.
 3. Não habilite edição pública da planilha. O proprietário precisa autorizar o Apps Script a acessá-la.
 4. A conta que publica o script deve ter acesso à planilha; a configuração da implantação deve permitir a chamada server-side pela Vercel sem tornar a planilha editável pelo público. Revise as políticas da organização antes de publicar. Não use credenciais de funcionário no código.
 
@@ -59,7 +59,7 @@ Configure o projeto para servir esta pasta como aplicação estática com as fun
 
 **Controle de acesso:** o token protege a comunicação com o Apps Script, mas não autentica usuários da interface nem impede, sozinho, que terceiros chamem os endpoints públicos da Vercel. Antes de registrar dados reais, aplique a autenticação/controle de acesso aprovado pela Santher na camada de publicação ou diante da API e confirme que o fluxo mobile consegue usá-lo. Não publique o endpoint de gravação desprotegido para uso industrial. A aplicação não inventa uma política de identidade corporativa.
 
-O endpoint de leitura aceita `from`, `to` (datas `YYYY-MM-DD`), `re`, `material`, `size` e `difficulty`, inclusive combinados. Retorna no máximo 5.000 registros ordenados do mais recente ao mais antigo; a resposta marca quando o limite foi excedido. Filtre o período para calcular indicadores de um conjunto delimitado. A aba deve permanecer restrita; os dados são fornecidos somente via API.
+O endpoint de leitura aceita `from`, `to` (datas `YYYY-MM-DD`), `re`, `material`, `weight` (inteiro em kg) e `difficulty`, inclusive combinados. Retorna no máximo 5.000 registros ordenados do mais recente ao mais antigo; a resposta marca quando o limite foi excedido. Filtre o período para calcular indicadores de um conjunto delimitado. A aba deve permanecer restrita; os dados são fornecidos somente via API.
 
 ## PWA
 
@@ -69,11 +69,11 @@ O manifesto usa um ícone SVG adaptável. Adicione ícones PNG em tamanhos espec
 
 ## Regras e limites conhecidos
 
-- A aba mantém as seis colunas existentes e não recebe campos adicionais.
+- A aba mantém as seis colunas existentes; `Peso (kg)` substitui `Tamanho` na quarta coluna. Cada novo lançamento representa uma bobina, e a coluna `Quantidade` recebe automaticamente `1`.
 - RE é tratado como texto numérico, preservando zeros à esquerda. Não se presume um padrão de RE além de dígitos.
-- RU, tamanho e dificuldade são seleções independentes; quantidade é qualquer inteiro positivo seguro.
-- Os indicadores somam `Quantidade`, não o número de linhas.
-- Linhas com data/formato/classificação/quantidade inválidos são omitidas da leitura; revise dados legados da planilha se os totais não baterem.
+- RU e dificuldade são seleções independentes; o peso é um inteiro positivo em kg.
+- Os indicadores em kg multiplicam o peso pela quantidade registrada; registros antigos com tamanho, sem peso numérico, não entram nos totais em kg.
+- Linhas com data/formato/classificação/peso/quantidade inválidos são omitidas da leitura; revise dados legados da planilha se os totais não baterem.
 - Requisições em gravação não são repetidas automaticamente. Se a resposta ficar incerta, tente novamente com os mesmos dados; o navegador reutiliza o identificador enquanto os valores permanecerem iguais.
 - A idempotência é temporária (cache de seis horas), não uma garantia permanente contra duplicidade.
 - Não é possível confirmar a conexão com a planilha ou a autorização corporativa sem os valores, permissões e implantação fornecidos pelo responsável.

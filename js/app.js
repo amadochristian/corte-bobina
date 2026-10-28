@@ -48,7 +48,7 @@ async function refreshHome() {
   error.hidden = true;
   try {
     const { records } = await getRecords({ from: todayISO(), to: todayISO() });
-    total.textContent = String(sum(records));
+    total.textContent = formatNumber(sumWeight(records));
   } catch (cause) {
     total.textContent = "Indisponível";
     error.textContent = cause.message;
@@ -66,6 +66,14 @@ function todayISO() {
 
 function sum(records) {
   return records.reduce((total, record) => total + Number(record.quantity), 0);
+}
+
+function sumWeight(records) {
+  return records.reduce((total, record) => total + (Number(record.weight) || 0) * Number(record.quantity), 0);
+}
+
+function formatNumber(value) {
+  return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 }).format(value);
 }
 
 function getFilterValues(form) {
@@ -114,7 +122,8 @@ function renderRecord(record) {
   top.append(date, quantity);
   const details = document.createElement("div");
   details.className = "record-card__details";
-  for (const text of [`RE ${record.re}`, record.material, record.size, record.difficulty]) {
+  const weightOrLegacySize = record.weight ? `Peso ${record.weight} kg` : `Tamanho ${record.legacySize}`;
+  for (const text of [`RE ${record.re}`, record.material, weightOrLegacySize, record.difficulty]) {
     const tag = document.createElement("span");
     tag.className = "record-card__tag";
     tag.textContent = text;
@@ -143,7 +152,10 @@ async function loadDashboard(filters = getFilterValues($("#dashboard-filters")))
     const result = await getRecords(filters);
     const records = result.records;
     recordsByView.set("dashboard", records);
-    status.textContent = result.truncated ? "Indicadores baseados nos primeiros 5.000 lançamentos retornados. Refine o período para incluir somente os dados necessários." : "";
+    const notes = [];
+    if (result.truncated) notes.push("Indicadores baseados nos primeiros 5.000 lançamentos retornados. Refine o período para incluir somente os dados necessários.");
+    if (records.some(record => !record.weight)) notes.push("Registros antigos sem peso são excluídos dos totais em kg.");
+    status.textContent = notes.join(" ");
     if (!records.length) {
       content.append(emptyState("Não há dados registrados para o período selecionado."));
       return;
@@ -160,15 +172,18 @@ function renderDashboard(records) {
   const today = records.filter(record => record.date === todayISO());
   const metrics = document.createElement("div");
   metrics.className = "metric-grid";
-  metrics.append(metric("Total no período", sum(records)), metric("Registradas hoje", sum(today)));
+  metrics.append(
+    metric("Peso conhecido no período", `${formatNumber(sumWeight(records))} kg`),
+    metric("Peso conhecido hoje", `${formatNumber(sumWeight(today))} kg`)
+  );
   const charts = document.createElement("div");
   charts.className = "chart-grid";
   charts.append(
     chart("Por material", aggregate(records, "material", ["Com RU", "Sem RU"])),
-    chart("Por tamanho", aggregate(records, "size", ["Pequena", "Média", "Grande"])),
+    chart("Peso por bobina (kg)", aggregateWeight(records), "kg"),
     chart("Por dificuldade", aggregate(records, "difficulty", ["Fácil", "Média", "Difícil"])),
-    chart("Produção por RE", aggregate(records, "re").sort((a, b) => b.value - a.value)),
-    chart("Evolução diária", aggregate(records, "date").sort((a, b) => a.label.localeCompare(b.label)))
+    chart("Bobinas por RE", aggregate(records, "re").sort((a, b) => b.value - a.value)),
+    chart("Evolução diária (kg)", aggregateWeightBy(records, "date").sort((a, b) => a.label.localeCompare(b.label)), "kg")
   );
   container.append(metrics, charts);
   return container;
@@ -197,7 +212,29 @@ function aggregate(records, key, order = null) {
   return labels.map(label => ({ label, value: totals.get(label) || 0 }));
 }
 
-function chart(title, data) {
+function aggregateWeight(records) {
+  const totals = new Map();
+  for (const record of records) {
+    if (!record.weight) continue;
+    const label = String(record.weight);
+    totals.set(label, (totals.get(label) || 0) + Number(record.weight) * Number(record.quantity));
+  }
+  return [...totals.entries()]
+    .map(([label, value]) => ({ label: `${label} kg`, value }))
+    .sort((a, b) => Number.parseInt(a.label, 10) - Number.parseInt(b.label, 10));
+}
+
+function aggregateWeightBy(records, key) {
+  const totals = new Map();
+  for (const record of records) {
+    if (!record.weight) continue;
+    const label = record[key] || "Não informado";
+    totals.set(label, (totals.get(label) || 0) + Number(record.weight) * Number(record.quantity));
+  }
+  return [...totals.entries()].map(([label, value]) => ({ label, value }));
+}
+
+function chart(title, data, unit = "bobinas") {
   const section = document.createElement("section");
   section.className = "chart-card";
   const heading = document.createElement("h2");
@@ -209,17 +246,17 @@ function chart(title, data) {
     const row = document.createElement("div");
     row.className = "bar-row";
     const label = document.createElement("span");
-    label.textContent = item.label === "date" ? item.label : (title === "Evolução diária" ? formatDate(item.label) : item.label);
+    label.textContent = title.startsWith("Evolução diária") ? formatDate(item.label) : item.label;
     const track = document.createElement("span");
     track.className = "bar-track";
-    track.setAttribute("aria-label", `${item.value} bobinas`);
+    track.setAttribute("aria-label", `${item.value} ${unit}`);
     const fill = document.createElement("span");
     fill.className = "bar-fill";
     fill.style.width = `${(item.value / max) * 100}%`;
     track.append(fill);
     const value = document.createElement("span");
     value.className = "bar-value";
-    value.textContent = String(item.value);
+    value.textContent = formatNumber(item.value);
     row.append(label, track, value);
     list.append(row);
   }
@@ -228,11 +265,11 @@ function chart(title, data) {
 }
 
 function showFormErrors(errors) {
-  for (const field of ["re", "material", "size", "difficulty", "quantity"]) {
+  for (const field of ["re", "material", "weight", "difficulty"]) {
     const error = $(`#${field}-error`);
     error.textContent = errors[field] || "";
-    const control = field === "re" ? $("#employee-re") : field === "quantity" ? $("#quantity") : $(`[name="${field}"]`);
-    if (control && (field === "re" || field === "quantity")) {
+    const control = field === "re" ? $("#employee-re") : $(`[name="${field}"]`);
+    if (control && (field === "re" || field === "weight")) {
       if (errors[field]) control.setAttribute("aria-invalid", "true");
       else control.removeAttribute("aria-invalid");
     }
@@ -245,9 +282,8 @@ async function handleSubmit(event) {
   const values = {
     re: $("#employee-re").value.trim(),
     material: new FormData(form).get("material") || "",
-    size: new FormData(form).get("size") || "",
-    difficulty: new FormData(form).get("difficulty") || "",
-    quantity: $("#quantity").value.trim()
+    weight: $("#weight").value.trim(),
+    difficulty: new FormData(form).get("difficulty") || ""
   };
   const errors = validateProduction(values);
   showFormErrors(errors);
@@ -255,7 +291,7 @@ async function handleSubmit(event) {
   feedback.hidden = true;
   if (Object.keys(errors).length) {
     const firstError = Object.keys(errors)[0];
-    const selector = firstError === "re" ? "#employee-re" : firstError === "quantity" ? "#quantity" : `[name="${firstError}"]`;
+    const selector = firstError === "re" ? "#employee-re" : `[name="${firstError}"]`;
     $(selector).focus();
     return;
   }
@@ -270,12 +306,11 @@ async function handleSubmit(event) {
   }
   const requestId = pendingRequestId;
   try {
-    const result = await saveRecord({ ...values, quantity: Number(values.quantity) }, requestId);
+    const result = await saveRecord({ ...values, weight: Number(values.weight) }, requestId);
     feedback.textContent = `Produção registrada com sucesso para ${formatDate(result.record.date)}.`;
     feedback.className = "feedback feedback--success";
     feedback.hidden = false;
     form.reset();
-    $("#quantity").value = "1";
     showFormErrors({});
     pendingRequestId = null;
     pendingRequestFingerprint = null;
@@ -305,9 +340,7 @@ function setUp() {
     $("#form-feedback").hidden = true;
     $("#employee-re").focus();
   });
-  $("#quantity-minus").addEventListener("click", () => { $("#quantity").stepDown(); });
-  $("#quantity-plus").addEventListener("click", () => { $("#quantity").stepUp(); });
-  for (const name of ["re", "quantity"]) {
+  for (const name of ["re", "weight"]) {
     $(`[name="${name}"]`).addEventListener("input", () => {
       const error = $(`#${name}-error`);
       if (error.textContent) error.textContent = "";

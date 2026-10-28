@@ -1,4 +1,4 @@
-const CACHE_NAME = "controle-refugo-v1";
+const CACHE_NAME = "controle-refugo-v2";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -8,9 +8,6 @@ const APP_SHELL = [
   "/js/api.js",
   "/js/validation.js",
   "/assets/icons/icon.svg",
-  "/assets/images/bobinas/pequena.svg",
-  "/assets/images/bobinas/media.svg",
-  "/assets/images/bobinas/grande.svg"
 ];
 
 self.addEventListener("install", event => {

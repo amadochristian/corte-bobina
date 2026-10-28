@@ -30,11 +30,12 @@
         <button class="button button--primary button--wide" type="button" data-view="registro">Registrar produção</button>
         <section class="summary-card" aria-labelledby="today-total-title">
           <div>
-            <p class="summary-card__label" id="today-total-title">Produção registrada hoje</p>
+            <p class="summary-card__label" id="today-total-title">Peso registrado hoje</p>
             <p class="summary-card__value" id="home-today-total" aria-live="polite">Carregando…</p>
           </div>
-          <span class="summary-card__unit">bobinas</span>
+          <span class="summary-card__unit">kg</span>
         </section>
+        <p class="field-hint">Registros antigos sem peso não entram neste total.</p>
         <p id="home-error" class="feedback feedback--error" role="alert" hidden></p>
         <div class="home-links">
           <button class="link-card" type="button" data-view="historico">
@@ -73,25 +74,12 @@
             <span id="material-error" class="field-error"></span>
           </fieldset>
 
-          <fieldset class="field">
-            <legend>Tamanho da bobina</legend>
-            <div class="size-grid">
-              <label class="size-choice">
-                <input type="radio" name="size" value="Pequena" required>
-                <span class="size-choice__card"><img src="/assets/images/bobinas/pequena.svg" alt="Ilustração de uma bobina pequena"><span>Pequena</span></span>
-              </label>
-              <label class="size-choice">
-                <input type="radio" name="size" value="Média" required>
-                <span class="size-choice__card"><img src="/assets/images/bobinas/media.svg" alt="Ilustração de uma bobina média"><span>Média</span></span>
-              </label>
-              <label class="size-choice">
-                <input type="radio" name="size" value="Grande" required>
-                <span class="size-choice__card"><img src="/assets/images/bobinas/grande.svg" alt="Ilustração de uma bobina grande"><span>Grande</span></span>
-              </label>
-            </div>
-            <span class="field-hint">Ilustrações de referência, sem escala ou medidas oficiais.</span>
-            <span id="size-error" class="field-error"></span>
-          </fieldset>
+          <div class="field">
+            <label for="weight">Peso da bobina (kg)</label>
+            <input id="weight" name="weight" type="number" inputmode="numeric" min="1" step="1" required aria-describedby="weight-hint weight-error">
+            <span id="weight-hint" class="field-hint">Informe o peso inteiro em quilogramas.</span>
+            <span id="weight-error" class="field-error"></span>
+          </div>
 
           <fieldset class="field">
             <legend>Dificuldade de corte</legend>
@@ -103,16 +91,6 @@
             <span class="field-hint">Classifique pela experiência real do corte, independentemente do RU.</span>
             <span id="difficulty-error" class="field-error"></span>
           </fieldset>
-
-          <div class="field">
-            <label for="quantity">Quantidade</label>
-            <div class="quantity-control">
-              <button id="quantity-minus" class="quantity-control__button" type="button" aria-label="Diminuir quantidade">−</button>
-              <input id="quantity" name="quantity" type="number" inputmode="numeric" min="1" step="1" value="1" required aria-describedby="quantity-error">
-              <button id="quantity-plus" class="quantity-control__button" type="button" aria-label="Aumentar quantidade">+</button>
-            </div>
-            <span id="quantity-error" class="field-error"></span>
-          </div>
 
           <p id="form-feedback" class="feedback" role="status" hidden></p>
           <button id="save-button" class="button button--primary button--wide" type="submit">Salvar produção</button>
@@ -131,7 +109,7 @@
           <div class="field"><label for="filter-to">Até</label><input id="filter-to" name="to" type="date"></div>
           <div class="field"><label for="filter-re">RE</label><input id="filter-re" name="re" type="text" inputmode="numeric" maxlength="30"></div>
           <div class="field"><label for="filter-material">Material</label><select id="filter-material" name="material"><option value="">Todos</option><option>Com RU</option><option>Sem RU</option></select></div>
-          <div class="field"><label for="filter-size">Tamanho</label><select id="filter-size" name="size"><option value="">Todos</option><option>Pequena</option><option>Média</option><option>Grande</option></select></div>
+          <div class="field"><label for="filter-weight">Peso (kg)</label><input id="filter-weight" name="weight" type="number" inputmode="numeric" min="1" step="1"></div>
           <div class="field"><label for="filter-difficulty">Dificuldade</label><select id="filter-difficulty" name="difficulty"><option value="">Todas</option><option>Fácil</option><option>Média</option><option>Difícil</option></select></div>
           <button class="button button--secondary" type="submit">Aplicar filtros</button>
           <button id="clear-filters" class="button button--text" type="button">Limpar filtros</button>
@@ -144,7 +122,7 @@
         <div class="page-heading">
           <button class="back-button" type="button" data-view="inicio">‹ Início</button>
           <h1 id="dashboard-title">Indicadores</h1>
-          <p class="muted">Totais calculados pela quantidade registrada.</p>
+          <p class="muted">Totais de peso calculados pelos lançamentos que informam o peso da bobina.</p>
         </div>
         <form id="dashboard-filters" class="filters filters--compact">
           <div class="field"><label for="dashboard-from">De</label><input id="dashboard-from" name="from" type="date"></div>

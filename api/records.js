@@ -6,9 +6,8 @@ function validateBody(body) {
   if (typeof body.requestId !== "string" || !/^[0-9a-f-]{36}$/i.test(body.requestId)) return "Identificador da solicitação inválido.";
   if (typeof body.re !== "string" || !/^\d{1,30}$/.test(body.re)) return "RE inválido.";
   if (!["Com RU", "Sem RU"].includes(body.material)) return "Material inválido.";
-  if (!["Pequena", "Média", "Grande"].includes(body.size)) return "Tamanho inválido.";
+  if (!Number.isSafeInteger(body.weight) || body.weight < 1) return "O peso deve ser um inteiro positivo em kg.";
   if (!["Fácil", "Média", "Difícil"].includes(body.difficulty)) return "Dificuldade inválida.";
-  if (!Number.isSafeInteger(body.quantity) || body.quantity < 1) return "A quantidade deve ser um inteiro positivo.";
   return "";
 }
 
@@ -27,9 +26,9 @@ module.exports = async function handler(req, res) {
   if (req.method !== "POST") return methodNotAllowed(res, ["GET", "POST"]);
   const invalid = validateBody(req.body);
   if (invalid) return json(res, 400, { ok: false, error: invalid });
-  const { re, material, size, difficulty, quantity, requestId } = req.body;
+  const { re, material, weight, difficulty, requestId } = req.body;
   try {
-    const result = await callAppsScript({ action: "create", requestId, record: { re, material, size, difficulty, quantity } });
+    const result = await callAppsScript({ action: "create", requestId, record: { re, material, weight, difficulty } });
     if (!result.record || typeof result.record.date !== "string") throw new Error("Invalid Apps Script create response");
     return json(res, 201, { ok: true, record: result.record, duplicate: result.duplicate === true });
   } catch (error) {

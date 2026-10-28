@@ -1,8 +1,8 @@
 const TIME_ZONE = "America/Sao_Paulo";
-const HEADERS = ["Data", "RE do colaborador", "Material", "Tamanho", "Dificuldade", "Quantidade"];
+const HEADERS = ["Data", "RE do colaborador", "Material", "Peso (kg)", "Dificuldade", "Quantidade"];
 const OPTIONS = {
   material: ["Com RU", "Sem RU"],
-  size: ["Pequena", "Média", "Grande"],
+  legacySizes: ["Pequena", "Média", "Grande"],
   difficulty: ["Fácil", "Média", "Difícil"]
 };
 const MAX_RECORDS = 5000;
@@ -70,7 +70,7 @@ function listRecords(sheet, filters, requestedLimit) {
   if (filters.from && filters.to && filters.from > filters.to) throw new Error("Invalid date range");
   if (filters.re && !/^\d{1,30}$/.test(filters.re)) throw new Error("Invalid RE filter");
   if (filters.material && !OPTIONS.material.includes(filters.material)) throw new Error("Invalid material filter");
-  if (filters.size && !OPTIONS.size.includes(filters.size)) throw new Error("Invalid size filter");
+  if (filters.weight && (!/^[1-9]\d*$/.test(String(filters.weight)) || !Number.isSafeInteger(Number(filters.weight)))) throw new Error("Invalid weight filter");
   if (filters.difficulty && !OPTIONS.difficulty.includes(filters.difficulty)) throw new Error("Invalid difficulty filter");
   const limit = Math.min(MAX_RECORDS, Math.max(1, Number(requestedLimit) || MAX_RECORDS));
   const lastRow = sheet.getLastRow();
@@ -84,7 +84,7 @@ function listRecords(sheet, filters, requestedLimit) {
     if (filters.to && record.date > filters.to) continue;
     if (filters.re && record.re !== filters.re) continue;
     if (filters.material && record.material !== filters.material) continue;
-    if (filters.size && record.size !== filters.size) continue;
+    if (filters.weight && record.weight !== Number(filters.weight)) continue;
     if (filters.difficulty && record.difficulty !== filters.difficulty) continue;
     matching.push({ record: record, row: index + 2 });
   }
@@ -97,13 +97,16 @@ function rowToRecord(row) {
   const date = normalizeDate(row[0]);
   const re = String(row[1]);
   const material = String(row[2]);
-  const size = String(row[3]);
+  const rawWeight = row[3];
+  const weightText = String(rawWeight);
+  const weight = /^[1-9]\d*$/.test(weightText) && Number.isSafeInteger(Number(weightText)) ? Number(weightText) : null;
+  const legacySize = OPTIONS.legacySizes.includes(weightText) ? weightText : "";
   const difficulty = String(row[4]);
   const quantity = Number(row[5]);
   if (!date || !/^\d{1,30}$/.test(re) || !OPTIONS.material.includes(material) ||
-      !OPTIONS.size.includes(size) || !OPTIONS.difficulty.includes(difficulty) ||
+      (weight === null && !legacySize) || !OPTIONS.difficulty.includes(difficulty) ||
       !Number.isSafeInteger(quantity) || quantity < 1) return null;
-  return { date: date, re: re, material: material, size: size, difficulty: difficulty, quantity: quantity };
+  return { date: date, re: re, material: material, weight: weight, legacySize: legacySize, difficulty: difficulty, quantity: quantity };
 }
 
 function normalizeDate(value) {
@@ -126,8 +129,8 @@ function createRecord(sheet, request) {
   const input = request.record || {};
   if (typeof request.requestId !== "string" || !/^[0-9a-f-]{36}$/i.test(request.requestId)) throw new Error("Invalid request id");
   if (typeof input.re !== "string" || !/^\d{1,30}$/.test(input.re)) throw new Error("Invalid RE");
-  if (!OPTIONS.material.includes(input.material) || !OPTIONS.size.includes(input.size) || !OPTIONS.difficulty.includes(input.difficulty)) throw new Error("Invalid classification");
-  if (!Number.isSafeInteger(input.quantity) || input.quantity < 1) throw new Error("Invalid quantity");
+  if (!OPTIONS.material.includes(input.material) || !OPTIONS.difficulty.includes(input.difficulty)) throw new Error("Invalid classification");
+  if (!Number.isSafeInteger(input.weight) || input.weight < 1) throw new Error("Invalid weight");
 
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
@@ -136,8 +139,8 @@ function createRecord(sheet, request) {
     const cacheKey = "record:" + request.requestId;
     const cached = cache.get(cacheKey);
     const fingerprint = JSON.stringify({
-      re: input.re, material: input.material, size: input.size,
-      difficulty: input.difficulty, quantity: input.quantity
+      re: input.re, material: input.material, weight: input.weight,
+      difficulty: input.difficulty
     });
     if (cached) {
       const prior = JSON.parse(cached);
@@ -148,14 +151,14 @@ function createRecord(sheet, request) {
       date: Utilities.formatDate(new Date(), TIME_ZONE, "yyyy-MM-dd"),
       re: input.re,
       material: input.material,
-      size: input.size,
+      weight: input.weight,
       difficulty: input.difficulty,
-      quantity: input.quantity
+      quantity: 1
     };
     const row = sheet.getLastRow() + 1;
-    sheet.getRange(row, 1, 1, HEADERS.length).setNumberFormats([["@", "@", "@", "@", "@", "0"]]);
+    sheet.getRange(row, 1, 1, HEADERS.length).setNumberFormats([["@", "@", "@", "0", "@", "0"]]);
     sheet.getRange(row, 1, 1, HEADERS.length).setValues([[
-      record.date, record.re, record.material, record.size, record.difficulty, record.quantity
+      record.date, record.re, record.material, record.weight, record.difficulty, record.quantity
     ]]);
     const result = { ok: true, record: record, duplicate: false };
     cache.put(cacheKey, JSON.stringify({
